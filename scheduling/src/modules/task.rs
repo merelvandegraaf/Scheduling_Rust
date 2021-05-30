@@ -2,7 +2,7 @@
 pub struct Task {
     machine_id: u16,
     duration: u16,
-    current_progress: u16,
+    pub current_progress: u16,
     task_completed: bool,
     latest_start_time: u16,
 }
@@ -51,7 +51,7 @@ impl Task {
     }
 }
 
-#[derive(PartialEq, Clone, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Job{
     job_id: u16,
     tasks: Vec<Task>,
@@ -77,15 +77,14 @@ impl Job{
         }
     }
 
-    pub fn get_first_open_task(&self) -> Task {
-        let mut a_task = self.tasks[0];
-        for t in &self.tasks{
-            if t.is_task_completed() == true {
-                a_task = *t;
-               break;
-            }
-        } 
-        return a_task;
+    pub fn get_first_open_task(&self) -> &Task {
+        let index = self.tasks.iter().position(|&r| r.is_task_completed() == false).unwrap();
+        return &self.tasks[index];
+    }
+
+    pub fn get_first_open_task_mut(&mut self) -> &mut Task {
+        let index = self.tasks.iter().position(|&r| r.is_task_completed() == false).unwrap();
+        return &mut self.tasks[index];
     }
 
     pub fn set_latest_start_times(&mut self){
@@ -134,8 +133,8 @@ impl Job{
 	    }
     }
 
-    pub fn get_end_task(&self) -> Task{
-        return self.tasks[self.tasks.len()-1]
+    pub fn get_end_task(&self) -> &Task{
+        return &self.tasks.last().unwrap();
     }
 
     pub fn get_job_id(&self) -> u16{
@@ -174,8 +173,8 @@ impl Job{
         self.end_time = a_end_time;
     }
 
-    pub fn get_first_task(&self) -> Task{
-        return self.tasks[0];
+    pub fn get_first_task(&self) -> &Task{
+        return &self.tasks[0];
     }
 
     pub fn get_tasks(&self) -> &Vec<Task>{

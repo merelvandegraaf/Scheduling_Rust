@@ -134,9 +134,6 @@ impl TextFile {
     }
 
     pub fn change_jobshop_progress(&mut self){
-        if !self.current_jobs.is_empty(){
-            println!("nr of job: {0} nr of tasks: {1}", self.current_jobs[0].get_job_id(), self.current_jobs[0].get_tasks().len());
-        }
         if !self.making_job_shop && self.current_number_of_jobs != 0{
             self.current_number_of_machines = self.calculate_current_getal();
             self.current_machine_id = self.current_number_of_machines;
@@ -174,7 +171,7 @@ pub struct JobShop{
 impl JobShop{
     pub fn new(some_jobs: Vec<modules::task::Job>, number_of_machines: u16) -> Self{
         let mut temp_map = HashMap::new();
-        for x in 0..(number_of_machines+1){
+        for x in 0..(number_of_machines){
             temp_map.insert(x, some_jobs.len() as u16);
         }
 
@@ -191,7 +188,8 @@ impl JobShop{
         let mut current_time = 0;
         while self.check_all_jobs_completed() == false{
             self.calculate_progress(current_time);
-            current_time = current_time+1;
+            current_time += 1;
+            println!("{}",current_time);
         }
         self.print_output();
     }
@@ -200,11 +198,12 @@ impl JobShop{
         for machine_index in 0..self.machine_status.len(){
             if self.machine_status[&(machine_index as u16)] != (self.jobs.len() as u16){
                 let machine_job_id = self.machine_status[&(machine_index as u16)];
-                self.jobs[machine_job_id as usize].get_first_open_task().up_current_progress();
+                self.jobs[machine_job_id as usize].get_first_open_task_mut().up_current_progress();
 
                 if self.jobs[machine_job_id as usize].get_first_open_task().get_current_progress() > 
                 self.jobs[machine_job_id as usize].get_first_open_task().get_duration(){
-                    self.jobs[machine_job_id as usize].get_first_open_task().set_task_completed(true);
+                  
+                    self.jobs[machine_job_id as usize].get_first_open_task_mut().set_task_completed(true);
                     self.recalculate_total_durations(current_time);
                     self.change_latest_start_times();
 
@@ -218,10 +217,10 @@ impl JobShop{
         }
 
         for machine_index in 0..self.machine_status.len(){
-            if self.machine_status[&(machine_index as u16)] != (self.jobs.len() as u16){
+            if self.machine_status[&(machine_index as u16)] == (self.jobs.len() as u16){
                 let mut current_slack = self.maximum_duration + 1;
                 let mut current_job_id = self.jobs.len() as u16;
-
+                
                 for j in &self.jobs{
                     if j.get_first_open_task() != j.get_end_task() &&
                     j.get_first_open_task().get_machine_id() == machine_index as u16 &&
@@ -233,8 +232,8 @@ impl JobShop{
 
                 if current_job_id != self.jobs.len() as u16{
                     self.set_machine_status(machine_index as u16, current_job_id);
-                    self.jobs[current_job_id as usize].get_first_open_task().up_current_progress();
-
+                    
+                    self.jobs[current_job_id as usize].get_first_open_task_mut().up_current_progress();
                     if self.jobs[current_job_id as usize].get_first_open_task() == self.jobs[current_job_id as usize].get_first_task(){
                         self.jobs[current_job_id as usize].set_start_time(current_time);
                     }
