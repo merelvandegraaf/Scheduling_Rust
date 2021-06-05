@@ -2,8 +2,8 @@
 pub struct Task {
     machine_id: u16,
     duration: u16,
-    pub current_progress: u16,
-    task_completed: bool,
+    current_progress: u16,
+    pub task_completed: bool,
     latest_start_time: u16,
 }
 
@@ -38,8 +38,10 @@ impl Task {
         self.task_completed
     }
 
-    pub fn set_task_completed(&mut self, new_task_completed: bool) {
-        self.task_completed = new_task_completed;
+    pub fn set_task_completed(&mut self) {
+        //println!("before1 {}",self.is_task_completed());
+        self.task_completed = true;
+        //println!("after1 {}",self.is_task_completed());
     }
 
     pub fn get_latest_start_time(&self) -> u16 {
@@ -115,13 +117,13 @@ impl Job{
 		    {
 			    self.total_duration += t.get_duration();
 		    }
-
 		    //Bereken de tijd van de tasks die klaar zijn.
 		    let mut worked_time = 0;
 		    for t in &self.tasks
 		    {
 			    if t.is_task_completed()
 			    {
+                    println!("stap 2");
 				    worked_time += t.get_duration();
 			    }
 		    }
