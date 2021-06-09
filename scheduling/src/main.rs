@@ -1,3 +1,5 @@
+#![crate_name = "scheduling"]
+
 mod modules;
 
 use std::time::{Instant};
@@ -16,19 +18,35 @@ fn main() {
 use std::io::{self, BufRead};
 use std::collections::HashMap;
 
+/// A TextFile object.
 pub struct TextFile {
+    /// This is the name of the textfile containing the jobshop.
     file_name: String,
+    /// Vector containing multiple Job objects
     current_jobs: Vec<modules::task::Job>,
+    /// Vector containing multiple task objects
     current_tasks: Vec<modules::task::Task>,
+    /// A vector with shorts
     current_getal: Vec<u16>,
+    /// Short for which job is in progress
     current_job_progress: u16,
+    /// short for how many jobs the jobshop has
     current_number_of_jobs: u16,
+    /// short for how many machines the jobshop has
     current_number_of_machines: u16,
+    /// short for storing the id of the machine that is currently busy.
     current_machine_id: u16,
+    /// bool storing if the job_shop is scheduling
     making_job_shop: bool,
 }
 
 impl TextFile {
+    /// Returns a TextFile object with the filename given them
+    ///
+    /// # Arguments
+    ///
+    /// * `file_name` - A string slice that holds the name of file the program reads from
+    ///
     pub fn new(file_name: String) -> Self {
         Self {
             file_name,
@@ -43,6 +61,7 @@ impl TextFile {
         }
     }
 
+    /// Reads all info from textFile and fills and executes a jobshop
     pub fn execute(&mut self) {
         if let Ok(lines) = TextFile::read_lines(&self.file_name) {
             // Consumes the iterator, returns an (Optional) String
@@ -57,7 +76,7 @@ impl TextFile {
                         {
                             break;
                         }
-                        //Checken of er een JobShop wordt gevuld of gezocht
+                        //Check if jobshop is being filled or checked
                         if !self.making_job_shop
                         {
                             self.check_for_new_jobshop(i);
@@ -73,6 +92,7 @@ impl TextFile {
         }
     }
 
+    /// Function used for reading a line from a textfile
     fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<std::fs::File>>>
     where
         P: AsRef<std::path::Path>,
@@ -81,6 +101,13 @@ impl TextFile {
         Ok(io::BufReader::new(file).lines())
     }
 
+    /// Returns a boolean. true if there are still unread tasks
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - A index for checking where you are
+    /// * `line` - A vector containing characters from a textfile
+    ///
    pub fn check_for_tasks(&self, index: u16,  line: Vec<char>) -> bool{
        let mut tasks_remaining = false;
        let mut character;
@@ -95,6 +122,7 @@ impl TextFile {
        return tasks_remaining;
     }
 
+    /// Returns a short. Calculates which number is read from the file
     pub fn calculate_current_getal(&mut self) -> u16{
         let mut factor = 1;
         let mut getal = 0;
@@ -111,6 +139,12 @@ impl TextFile {
         return getal;
     }
 
+    /// Returns a boolean. true if the character is a whitespace
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - A character that is either a whitespace or a number
+    ///
     pub fn check_white_space(&mut self, i: &char) -> bool{
         if i.is_digit(10){
             self.current_getal.push(*i as u16 - 48);
@@ -121,12 +155,23 @@ impl TextFile {
         return false;
     }
 
+    /// checks if a new jobshop is starting
+    ///
+    /// # Arguments
+
+    /// * `i` - A character from a line
+    ///
     pub fn check_for_new_jobshop(&mut self, i: &char){
         if self.check_white_space(i) && self.current_number_of_jobs == 0{
             self.current_number_of_jobs = self.calculate_current_getal();
         }
     }
 
+    /// fills a variables needed for a new jobshop object
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - A character from a line
     pub fn fill_jobshop(&mut self, i: &char){
         if self.check_white_space(i){
             if self.current_machine_id == self.current_number_of_machines{
@@ -139,6 +184,7 @@ impl TextFile {
         }
     }
 
+    /// fills a jobshop or creates one and starts scheduling.
     pub fn change_jobshop_progress(&mut self){
         if !self.making_job_shop && self.current_number_of_jobs != 0{
             self.current_number_of_machines = self.calculate_current_getal();
@@ -167,7 +213,7 @@ impl TextFile {
     }
 }
 
-
+/// A jobshop object containing jobs
 pub struct JobShop{
     jobs : Vec<modules::task::Job>,
     machine_status: HashMap< u16, u16>,
@@ -175,6 +221,14 @@ pub struct JobShop{
 }
 
 impl JobShop{
+    
+    /// Returns a new Jobshop object
+    ///
+    /// # Arguments
+    ///
+    /// * `some_jobs` - a vector containing the jobs for the jobshop
+    /// * `number_of_machines` - the number of machines the jobshop has
+    ///
     pub fn new(some_jobs: Vec<modules::task::Job>, number_of_machines: u16) -> Self{
         let mut temp_map = HashMap::new();
         for x in 0..(number_of_machines){
@@ -190,6 +244,7 @@ impl JobShop{
         return temp_object;
     }
 
+    /// starts scheduling
     pub fn schedule(&mut self){
         let mut current_time = 0;
         while self.check_all_jobs_completed() == false{
@@ -199,6 +254,11 @@ impl JobShop{
         self.print_output();
     }
 
+    /// Calculates the progress based on the time
+    ///
+    /// # Arguments
+    ///
+    /// * `current_time` - A number indicating the time
     pub fn calculate_progress(&mut self, current_time: u16){
         for machine_index in 0..self.machine_status.len(){
             if self.machine_status[&(machine_index as u16)] != (self.jobs.len() as u16){
@@ -249,12 +309,19 @@ impl JobShop{
         }
     }
 
+    /// Recalculates the duration
+    ///
+    /// # Arguments
+    ///
+    /// * `current_time` - A number indicating the time
+    ///
     pub fn recalculate_total_durations(&mut self, current_time: u16){
         for j in &mut self.jobs{
             j.calculate_total_duration(current_time);
         }
     }
 
+    /// Recalculates and sets the start times
     pub fn change_latest_start_times(&mut self){
         let old_maximum_duration =  self.maximum_duration;
 
@@ -275,12 +342,14 @@ impl JobShop{
         }
     }
 
+    /// Prints the job ids, start times and end times
     pub fn print_output(&self){
         for j in &self.jobs{
             println!("{0} {1} {2}", j.get_job_id(), j.get_start_time(), j.get_end_time());
         }  
     }
 
+    /// returns true if all the jobs are completed
     pub fn check_all_jobs_completed(&self) -> bool{
         for j in &self.jobs{
             if j.get_first_open_task() != j.get_end_task(){
@@ -290,6 +359,13 @@ impl JobShop{
         return true;
     }
 
+    /// sets current status of a machine
+    ///
+    /// # Arguments
+    ///
+    /// * `machine_id` - A id for the machine that needs to be changed
+    /// * `job_id` - A id for the job that is busy
+    ///
     pub fn set_machine_status(&mut self, machine_id: u16, job_id: u16){
         self.machine_status.insert(machine_id, job_id);
     }

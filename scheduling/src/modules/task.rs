@@ -1,3 +1,5 @@
+
+    /// A task object
 #[derive(PartialEq, Clone, Copy, Eq)]
 pub struct Task {
     machine_id: u16,
@@ -8,6 +10,13 @@ pub struct Task {
 }
 
 impl Task {
+    /// Returns a new Task object
+    ///
+    /// # Arguments
+    ///
+    /// * `a_machine_id` - A id for which machine the task is for
+    /// * `a_duration` - A duration for the task.
+    ///
     pub fn new(a_machine_id: u16, a_duration: u16) -> Self {
         Self {
             machine_id: a_machine_id,
@@ -18,6 +27,8 @@ impl Task {
         }
     }
 
+    /// Getters and setters for all the variables
+ 
     pub fn get_machine_id(&self) -> u16 {
         self.machine_id
     }
@@ -39,9 +50,7 @@ impl Task {
     }
 
     pub fn set_task_completed(&mut self) {
-        //println!("before1 {}",self.is_task_completed());
         self.task_completed = true;
-        //println!("after1 {}",self.is_task_completed());
     }
 
     pub fn get_latest_start_time(&self) -> u16 {
@@ -53,6 +62,7 @@ impl Task {
     }
 }
 
+/// A Job objects
 #[derive(PartialEq, Eq, Clone)]
 pub struct Job{
     job_id: u16,
@@ -64,6 +74,14 @@ pub struct Job{
 }
 
 impl Job{
+
+    /// Returns a new Job object
+    ///
+    /// # Arguments
+    ///
+    /// * `a_job_id` - a Id for the job
+    /// * `some_tasks` - A vector containing all the tasks for the job
+    ///
     pub fn new(a_job_id: u16, some_tasks: Vec<Task>) -> Self {
         let mut temp_total_duration = 0;
         for t in &some_tasks{
@@ -79,6 +97,7 @@ impl Job{
         }
     }
 
+    /// Setters and getters for the Job
     pub fn get_first_open_task(&self) -> &Task {
         let index = self.tasks.iter().position(|&r| !r.is_task_completed()).unwrap();
         return &self.tasks[index];
@@ -111,13 +130,13 @@ impl Job{
     pub fn calculate_total_duration(&mut self, current_time: u16){
         if self.get_first_open_task().get_latest_start_time() < current_time
 	    {
-		    //Reset de totalDuration.
+		    // Reset the total_duration.
 		    self.total_duration = 0;
 		    for t in &mut self.tasks
 		    {
 			    self.total_duration += t.get_duration();
 		    }
-		    //Bereken de tijd van de tasks die klaar zijn.
+		    // Calculate the time it took tasks to get done
 		    let mut worked_time = 0;
 		    for t in &self.tasks
 		    {
@@ -126,7 +145,8 @@ impl Job{
 				    worked_time += t.get_duration();
 			    }
 		    }
-		    //Verhoogt de totalDuration met de tijd die extra nodig was om de voltooide tasks af te krijgen
+	
+            // Up the total_duration using the time that was needed to finish tasks
 		    if current_time >= worked_time
 		    {
 		    	self.total_duration += current_time - worked_time;
