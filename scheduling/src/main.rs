@@ -1,10 +1,16 @@
 mod modules;
 
+use std::time::{Instant};
+
 fn main() {
+    let start = Instant::now();
     let args: Vec<String> = std::env::args().collect();
     let arg = &args[1];
     let mut text_file = TextFile::new(arg.to_string());
     text_file.execute();
+    let duration = start.elapsed();
+
+    println!("Time elapsed is: {:?}", duration);
 }
 
 use std::io::{self, BufRead};
@@ -189,7 +195,6 @@ impl JobShop{
         while self.check_all_jobs_completed() == false{
             self.calculate_progress(current_time);
             current_time += 1;
-            //println!("{}",current_time);
         }
         self.print_output();
     }
@@ -203,12 +208,8 @@ impl JobShop{
                 if self.jobs[machine_job_id as usize].get_first_open_task().get_current_progress() > 
                 self.jobs[machine_job_id as usize].get_first_open_task().get_duration(){
 
-                    //task completed wordt niet true
-                    println!("before {}",self.jobs[machine_job_id as usize].get_first_open_task().is_task_completed());
                     self.jobs[machine_job_id as usize].get_first_open_task_mut().set_task_completed();
-                    self.jobs[machine_job_id as usize].get_first_open_task_mut().task_completed = true;
-                    println!("after {}",self.jobs[machine_job_id as usize].get_first_open_task().is_task_completed());
-  
+
                     self.recalculate_total_durations(current_time);
                     self.change_latest_start_times();
 
@@ -280,8 +281,8 @@ impl JobShop{
         }  
     }
 
-    pub fn check_all_jobs_completed(&mut self) -> bool{
-        for j in &mut self.jobs{
+    pub fn check_all_jobs_completed(&self) -> bool{
+        for j in &self.jobs{
             if j.get_first_open_task() != j.get_end_task(){
                 return false;
             }

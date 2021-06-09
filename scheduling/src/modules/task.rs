@@ -80,7 +80,7 @@ impl Job{
     }
 
     pub fn get_first_open_task(&self) -> &Task {
-        let index = self.tasks.iter().position(|&r| r.is_task_completed() == false).unwrap();
+        let index = self.tasks.iter().position(|&r| !r.is_task_completed()).unwrap();
         return &self.tasks[index];
     }
 
@@ -113,7 +113,7 @@ impl Job{
 	    {
 		    //Reset de totalDuration.
 		    self.total_duration = 0;
-		    for t in &self.tasks
+		    for t in &mut self.tasks
 		    {
 			    self.total_duration += t.get_duration();
 		    }
@@ -123,7 +123,6 @@ impl Job{
 		    {
 			    if t.is_task_completed()
 			    {
-                    println!("stap 2");
 				    worked_time += t.get_duration();
 			    }
 		    }
